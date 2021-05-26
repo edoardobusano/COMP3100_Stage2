@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- system information generated for ds-sim@MQ, 19-March, 2021 @ MQ - client-server -->
+<system>
+	<servers>
+		<server type="tiny" limit="1" bootupTime="40" hourlyRate="0.40" coreCount="1" memory="4000" disk="32000" />
+		<server type="small" limit="1" bootupTime="40" hourlyRate="0.40" coreCount="2" memory="8000" disk="64000" />
+		<server type="medium" limit="1" bootupTime="60" hourlyRate="0.80" coreCount="4" memory="16000" disk="128000" />
+	</servers>
+</system>

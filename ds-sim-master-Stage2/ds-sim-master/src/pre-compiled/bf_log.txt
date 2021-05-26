@@ -1,0 +1,102 @@
+# ds-sim server 19-March, 2021 @ MQ - client-server
+# Server-side simulator started with './ds-server -c ../../configs/sample-configs/ds-config01--wk9.xml -v all'
+# Waiting for connection to port 50000 of IP address 127.0.0.1
+RCVD HELO
+SENT OK
+RCVD AUTH edoardo
+# Welcome  edoardo!
+# The system information can be read from 'ds-system.xml'
+SENT OK
+RCVD REDY
+SENT JOBN 32 0 728 1 700 600
+RCVD GETS Capable 1 700 600
+SENT DATA 3 124
+RCVD OK
+SENT tiny 0 inactive -1 1 4000 32000 0 0
+small 0 inactive -1 2 8000 64000 0 0
+medium 0 inactive -1 4 16000 128000 0 0
+RCVD OK
+SENT .
+RCVD SCHD 0 tiny 0
+t:         32 job     0 (waiting) on # 0 of server tiny (booting) SCHEDULED
+SENT OK
+RCVD REDY
+SENT JOBN 54 1 1144 1 400 800
+RCVD GETS Capable 1 400 800
+SENT DATA 3 124
+RCVD OK
+SENT tiny 0 booting 72 0 3300 31400 1 0
+small 0 inactive -1 2 8000 64000 0 0
+medium 0 inactive -1 4 16000 128000 0 0
+RCVD OK
+SENT .
+RCVD SCHD 1 small 0
+t:         54 job     1 (waiting) on # 0 of server small (booting) SCHEDULED
+SENT OK
+RCVD REDY
+SENT JOBN 55 2 260 2 900 1600
+RCVD GETS Capable 2 900 1600
+SENT DATA 2 124
+RCVD OK
+SENT small 0 booting 94 1 7600 63200 1 0
+medium 0 inactive -1 4 16000 128000 0 0
+RCVD OK
+SENT .
+RCVD SCHD 2 medium 0
+t:         55 job     2 (waiting) on # 0 of server medium (booting) SCHEDULED
+SENT OK
+RCVD REDY
+t:         72 job     0 on # 0 of server tiny RUNNING
+t:         94 job     1 on # 0 of server small RUNNING
+SENT JOBN 108 3 151 2 500 3300
+RCVD GETS Capable 2 500 3300
+SENT DATA 2 124
+RCVD OK
+SENT small 0 active 94 1 7600 63200 0 1
+medium 0 booting 115 2 15100 126400 1 0
+RCVD OK
+SENT .
+RCVD SCHD 3 small 0
+t:        108 job     3 (waiting) on # 0 of server small (active) SCHEDULED
+SENT OK
+RCVD REDY
+t:        115 job     2 on # 0 of server medium RUNNING
+SENT JOBN 287 4 3936 4 1600 4600
+RCVD GETS Capable 4 1600 4600
+SENT DATA 1 124
+RCVD OK
+SENT medium 0 active 115 2 15100 126400 0 1
+RCVD OK
+SENT .
+RCVD SCHD 4 medium 0
+t:        287 job     4 (waiting) on # 0 of server medium (active) SCHEDULED
+SENT OK
+RCVD REDY
+t:        292 job     2 on # 0 of server medium COMPLETED
+t:        292 job     4 on # 0 of server medium RUNNING
+SENT JCPL 292 2 medium 0
+RCVD REDY
+t:       1902 job     0 on # 0 of server tiny COMPLETED
+SENT JCPL 1902 0 tiny 0
+RCVD REDY
+t:       2287 job     1 on # 0 of server small COMPLETED
+t:       2287 job     3 on # 0 of server small RUNNING
+SENT JCPL 2287 1 small 0
+RCVD REDY
+t:       2424 job     3 on # 0 of server small COMPLETED
+SENT JCPL 2424 3 small 0
+RCVD REDY
+t:       2833 job     4 on # 0 of server medium COMPLETED
+SENT JCPL 2833 4 medium 0
+RCVD REDY
+SENT NONE
+RCVD QUIT
+SENT QUIT
+# -------------------------------------------------------------------------------------
+# 1 tiny servers used with a utilisation of 100.00 at the cost of $0.20
+# 1 small servers used with a utilisation of 100.00 at the cost of $0.26
+# 1 medium servers used with a utilisation of 100.00 at the cost of $0.60
+# ==================================== [ Summary ] ====================================
+# actual simulation end time: 2833, #jobs: 5 (failed 0 times)
+# total #servers used: 3, avg util: 100.00% (ef. usage: 100.00%), total cost: $1.07
+# avg waiting time: 464, avg exec time: 1375, avg turnaround time: 1839
