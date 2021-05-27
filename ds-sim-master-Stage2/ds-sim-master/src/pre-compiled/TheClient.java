@@ -20,6 +20,7 @@ public class TheClient {
 	private int largestServerIndex = 0;
 	private String inputString;
 	private Boolean completed = false;
+	private String[] sections;
 
 	// Constructor for our client class: we connect the socket to the address
 	// 127.0.0.1 and to the port 50000, as
@@ -50,19 +51,19 @@ public class TheClient {
 
 	public void start() {
 		write("HELO");
-		System.out.println("Sent HELLO");
+		//System.out.println("Sent HELLO");
 		inputString = read();
-		System.out.println("Received " + inputString);
+		//System.out.println("Received " + inputString);
 		write("AUTH " + System.getProperty("user.name"));
-		System.out.println("Sent Auth " + System.getProperty("user.name"));
+		//System.out.println("Sent Auth " + System.getProperty("user.name"));
 		inputString = read();
-		System.out.println("Received " + inputString);
+		//System.out.println("Received " + inputString);
 		File file = new File("ds-system.xml");
 		readFile(file);
 		write("REDY");
-		System.out.println("Sent REDY");
+		//System.out.println("Sent REDY");
 		inputString = read();
-		System.out.println("Received " + inputString);
+		//System.out.println("Received " + inputString);
 		allToLargest();
 		quit();
 	}
@@ -88,17 +89,17 @@ public class TheClient {
 			while (!completed) {
 				if (inputString.equals("OK") || inputString.equals(".") || inputString.equals(".OK")) {
 					write("REDY");
-					System.out.println("Sent REDY");
+					//System.out.println("Sent REDY");
 					inputString = read();
-					System.out.println("Received " + inputString);
+					//System.out.println("Received " + inputString);
 				}
 				String[] splitMessage = inputString.split("\\s+");
 				String firstWord = splitMessage[0];
 				while (firstWord.equals("JCPL") || firstWord.equals("RESF") || firstWord.equals("RESR")) {
 					write("REDY");
-					System.out.println("Sent REDY");
+					//System.out.println("Sent REDY");
 					inputString = read();
-					System.out.println("Received " + inputString);
+					//System.out.println("Received " + inputString);
 
 					splitMessage = inputString.split("\\s+");
 					firstWord = splitMessage[0];
@@ -110,20 +111,74 @@ public class TheClient {
 
 				String[] jobSections = inputString.split("\\s+");
 
-				write("GETS Capable " + jobSections[4] + " " + jobSections[5] + " " + jobSections[6]);
+				write("GETS Avail " + jobSections[4] + " " + jobSections[5] + " " + jobSections[6]);
 				String dataString = read();
-				System.out.println("Received " + dataString);
+				String[] dataLines = dataString.split("\\s+");
+				int linesNum = Integer.parseInt(dataLines[1]);
+				//System.out.println("Number of lines " + linesNum);
 				write("OK");
 				dataString = read();
-				System.out.println("Received " + dataString);
-				write("OK");
-				String[] lines = dataString.split("\\r?\\n");
-				String[] sections = lines[0].split("\\s+");
+				if (!dataString.equals(".")) {
+					for (int a = 0; a < linesNum; a++){
+						//System.out.println("Loop is " + a);
+						//System.out.println("Received  for avail " + dataString);
+						String[] lines = dataString.split("\\r?\\n");
+						sections = lines[0].split("\\s+");
+						if (lines.length >= 2){
+							for (int i = 1; i < lines.length; i++){
+								//System.out.println("Loop is " + i);
+								String[] sec = lines[i].split("\\s+");
+								if (Integer.parseInt(sec[4]) > Integer.parseInt(sections[4])){
+									sections = sec;
+								}
+							}
+						}
+						if (a == linesNum -1){
+							write("OK");
+							break;
+						}
+						else {
+							dataString = read();
+						}
+					}
+					
+				} else {
+					write("GETS Capable " + jobSections[4] + " " + jobSections[5] + " " + jobSections[6]);
+					dataString = read();
+					dataLines = dataString.split("\\s+");
+					linesNum = Integer.parseInt(dataLines[1]);
+					//System.out.println("Number of lines" + linesNum);
+					write("OK");
+					dataString = read();
+					for (int a = 0; a < linesNum; a++){
+						//System.out.println("Loop is " + a);
+						//System.out.println("Received  for cap " + dataString);
+						String[] lines = dataString.split("\\r?\\n");
+						sections = lines[0].split("\\s+");
+						if (lines.length >= 2){
+							for (int i = 1; i < lines.length; i++){
+								//System.out.println("Loop is " + i);
+								String[] sec = lines[i].split("\\s+");
+								if (Integer.parseInt(sec[4]) > Integer.parseInt(sections[4])){
+									sections = sec;
+								}
+							}
+						}
+						if (a == linesNum -1){
+							write("OK");
+							break;
+						}
+						else {
+							dataString = read();
+						}
+					}
+				}
+				inputString = read();
 
 				String num = jobSections[2];
 				String scheduleMessage = "SCHD " + num + " " + sections[0] + " " + sections[1];
 				write(scheduleMessage);
-				System.out.println("JOB SENT: SCHD " + num + " " + sections[0] + " " + sections[1]);
+				//System.out.println("JOB SENT: SCHD " + num + " " + sections[0] + " " + sections[1]);
 				// String[] jobSections = inputString.split("\\s+");
 				// String num = jobSections[2];
 				// String scheduleMessage = "SCHD " + num + " " +
@@ -132,7 +187,7 @@ public class TheClient {
 				// System.out.println("JOB SENT: SCHD " + num + " " +
 				// servers[largestServerIndex].type + " " + "0");
 				inputString = read();
-				System.out.println("Received " + inputString);
+				//System.out.println("Received  after Scheduling " + inputString);
 			}
 		}
 	}
@@ -179,8 +234,8 @@ public class TheClient {
 
 	public void write(String text) {
 		try {
-			out.write((text).getBytes());
-			// System.out.print("SENT: " + text);
+			out.write((text + "\n").getBytes());
+			//System.out.print("SENT: " + text);
 			out.flush();
 		} catch (IOException i) {
 			System.out.println("ERR: " + i);
@@ -190,12 +245,7 @@ public class TheClient {
 	public String read() {
 		String text = "";
 		try {
-			while (!in.ready()) { // do nothing if in is not ready
-			}
-			while (in.ready()) { // if it is then return the read char.
-				text += (char) in.read();
-			}
-			// text = in.readLine();
+            text = in.readLine();
 			// System.out.print("RCVD: " + text);
 			inputString = text;
 		} catch (IOException i) {
@@ -207,9 +257,9 @@ public class TheClient {
 	public void quit() {
 		try {
 			write("QUIT");
-			System.out.println("Sent QUIT");
+			//System.out.println("Sent QUIT");
 			inputString = read();
-			System.out.println("Received" + inputString);
+			//System.out.println("Received" + inputString);
 			if (inputString.equals("QUIT")) {
 				in.close();
 				out.close();
