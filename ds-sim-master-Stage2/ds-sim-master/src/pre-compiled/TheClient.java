@@ -7,6 +7,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 //DataOutputStrem
 
 // ./ds-server -c <CONFIG> -n
+// Use ./test-results "java TheClient" -o ru -n -c ../../configs/other/
 
 public class TheClient {
 
@@ -119,20 +120,19 @@ public class TheClient {
 				write("OK");
 				dataString = read();
 				if (!dataString.equals(".")) {
+					String[] lines = dataString.split("\\r?\\n");
+					sections = lines[0].split("\\s+");
 					for (int a = 0; a < linesNum; a++){
 						//System.out.println("Loop is " + a);
 						//System.out.println("Received  for avail " + dataString);
-						String[] lines = dataString.split("\\r?\\n");
-						sections = lines[0].split("\\s+");
-						if (lines.length >= 2){
-							for (int i = 1; i < lines.length; i++){
-								//System.out.println("Loop is " + i);
-								String[] sec = lines[i].split("\\s+");
-								if (Integer.parseInt(sec[4]) > Integer.parseInt(sections[4])){
-									sections = sec;
-								}
-							}
+
+						lines = dataString.split("\\r?\\n");
+						String[] sec = lines[0].split("\\s+");
+						if (Integer.parseInt(sec[4]) > Integer.parseInt(sections[4])){
+							//System.out.println("Cores comparison " + Integer.parseInt(sec[4]) + " " + Integer.parseInt(sections[4]));
+							sections = sec;
 						}
+						
 						if (a == linesNum -1){
 							write("OK");
 							break;
@@ -150,20 +150,18 @@ public class TheClient {
 					//System.out.println("Number of lines" + linesNum);
 					write("OK");
 					dataString = read();
+					String[] lines = dataString.split("\\r?\\n");
+					sections = lines[0].split("\\s+");
 					for (int a = 0; a < linesNum; a++){
 						//System.out.println("Loop is " + a);
-						//System.out.println("Received  for cap " + dataString);
-						String[] lines = dataString.split("\\r?\\n");
-						sections = lines[0].split("\\s+");
-						if (lines.length >= 2){
-							for (int i = 1; i < lines.length; i++){
-								//System.out.println("Loop is " + i);
-								String[] sec = lines[i].split("\\s+");
-								if (Integer.parseInt(sec[4]) > Integer.parseInt(sections[4])){
-									sections = sec;
-								}
-							}
+						//System.out.println("Received  for avail " + dataString);
+
+						lines = dataString.split("\\r?\\n");
+						String[] sec = lines[0].split("\\s+");
+						if (Integer.parseInt(sec[4]) > Integer.parseInt(sections[4])){
+							sections = sec;
 						}
+						
 						if (a == linesNum -1){
 							write("OK");
 							break;
@@ -173,6 +171,7 @@ public class TheClient {
 						}
 					}
 				}
+				//System.out.println("Final core " +  Integer.parseInt(sections[4]));
 				inputString = read();
 
 				String num = jobSections[2];
