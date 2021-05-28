@@ -3,10 +3,8 @@ import java.io.*;
 import org.w3c.dom.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-//DataInputStream
-//DataOutputStrem
-
 // ./ds-server -c <CONFIG> -n
+
 // Use ./test-results "java TheClient" -o ru -n -c ../../configs/other/
 
 public class TheClient {
@@ -52,55 +50,31 @@ public class TheClient {
 
 	public void start() {
 		write("HELO");
-		//System.out.println("Sent HELLO");
 		inputString = read();
-		//System.out.println("Received " + inputString);
 		write("AUTH " + System.getProperty("user.name"));
-		//System.out.println("Sent Auth " + System.getProperty("user.name"));
 		inputString = read();
-		//System.out.println("Received " + inputString);
 		File file = new File("ds-system.xml");
 		readFile(file);
 		write("REDY");
-		//System.out.println("Sent REDY");
 		inputString = read();
-		//System.out.println("Received " + inputString);
-		allToLargest();
+		theAlgorithm();
 		quit();
 	}
 
-	// allToLargest deals with the communication between server and client after the
-	// client sent the first REDY, and
-	// the server sent the first reply. If the reply is NONE, the method will just
-	// quit and the connection will be closed,
-	// while, if the client receives other commands, the algorithm will run as
-	// expected. It follows the workflow shown in
-	// the ds-server pdf file provided, so the algorithm loops until it receives a
-	// NONE as a reply from the server.
-	// In case it does not receive a JOBN reply, the client will write REDY, so that
-	// the command can be skipped.
-	// When the server sends a JOBN message, the message is split and data about the
-	// job is gathered.
-	// The server type needed in the SCHD command is found thanks to the readFile
-	// method and the findLargestServer method.
-	public void allToLargest() {
+	public void theAlgorithm() {
 		if (inputString.equals("NONE")) {
 			quit();
 		} else {
 			while (!completed) {
 				if (inputString.equals("OK") || inputString.equals(".") || inputString.equals(".OK")) {
 					write("REDY");
-					//System.out.println("Sent REDY");
 					inputString = read();
-					//System.out.println("Received " + inputString);
 				}
 				String[] splitMessage = inputString.split("\\s+");
 				String firstWord = splitMessage[0];
 				while (firstWord.equals("JCPL") || firstWord.equals("RESF") || firstWord.equals("RESR")) {
 					write("REDY");
-					//System.out.println("Sent REDY");
 					inputString = read();
-					//System.out.println("Received " + inputString);
 
 					splitMessage = inputString.split("\\s+");
 					firstWord = splitMessage[0];
@@ -116,20 +90,16 @@ public class TheClient {
 				String dataString = read();
 				String[] dataLines = dataString.split("\\s+");
 				int linesNum = Integer.parseInt(dataLines[1]);
-				//System.out.println("Number of lines " + linesNum);
 				write("OK");
 				dataString = read();
 				if (!dataString.equals(".")) {
 					String[] lines = dataString.split("\\r?\\n");
 					sections = lines[0].split("\\s+");
 					for (int a = 0; a < linesNum; a++){
-						//System.out.println("Loop is " + a);
-						//System.out.println("Received  for avail " + dataString);
 
 						lines = dataString.split("\\r?\\n");
 						String[] sec = lines[0].split("\\s+");
 						if (Integer.parseInt(sec[4]) > Integer.parseInt(sections[4])){
-							//System.out.println("Cores comparison " + Integer.parseInt(sec[4]) + " " + Integer.parseInt(sections[4]));
 							sections = sec;
 						}
 						
@@ -147,14 +117,11 @@ public class TheClient {
 					dataString = read();
 					dataLines = dataString.split("\\s+");
 					linesNum = Integer.parseInt(dataLines[1]);
-					//System.out.println("Number of lines" + linesNum);
 					write("OK");
 					dataString = read();
 					String[] lines = dataString.split("\\r?\\n");
 					sections = lines[0].split("\\s+");
 					for (int a = 0; a < linesNum; a++){
-						//System.out.println("Loop is " + a);
-						//System.out.println("Received  for avail " + dataString);
 
 						lines = dataString.split("\\r?\\n");
 						String[] sec = lines[0].split("\\s+");
@@ -171,22 +138,12 @@ public class TheClient {
 						}
 					}
 				}
-				//System.out.println("Final core " +  Integer.parseInt(sections[4]));
 				inputString = read();
 
 				String num = jobSections[2];
 				String scheduleMessage = "SCHD " + num + " " + sections[0] + " " + sections[1];
 				write(scheduleMessage);
-				//System.out.println("JOB SENT: SCHD " + num + " " + sections[0] + " " + sections[1]);
-				// String[] jobSections = inputString.split("\\s+");
-				// String num = jobSections[2];
-				// String scheduleMessage = "SCHD " + num + " " +
-				// servers[largestServerIndex].type + " " + "0";
-				// write(scheduleMessage);
-				// System.out.println("JOB SENT: SCHD " + num + " " +
-				// servers[largestServerIndex].type + " " + "0");
 				inputString = read();
-				//System.out.println("Received  after Scheduling " + inputString);
 			}
 		}
 	}
@@ -234,7 +191,6 @@ public class TheClient {
 	public void write(String text) {
 		try {
 			out.write((text + "\n").getBytes());
-			//System.out.print("SENT: " + text);
 			out.flush();
 		} catch (IOException i) {
 			System.out.println("ERR: " + i);
@@ -245,7 +201,6 @@ public class TheClient {
 		String text = "";
 		try {
             text = in.readLine();
-			// System.out.print("RCVD: " + text);
 			inputString = text;
 		} catch (IOException i) {
 			System.out.println("ERR: " + i);
@@ -256,9 +211,7 @@ public class TheClient {
 	public void quit() {
 		try {
 			write("QUIT");
-			//System.out.println("Sent QUIT");
 			inputString = read();
-			//System.out.println("Received" + inputString);
 			if (inputString.equals("QUIT")) {
 				in.close();
 				out.close();
