@@ -49,18 +49,30 @@ public class TheClient {
 	}
 
 	public void start() {
+		// Start communication with server
 		write("HELO");
+		// Read server reply
 		inputString = read();
+		// Authenticate ourselves using our user name
 		write("AUTH " + System.getProperty("user.name"));
+		// Read server reply
 		inputString = read();
+		// Create a new file to parse data from the server about the system
 		File file = new File("ds-system.xml");
 		readFile(file);
+		// Send a message to state the client is ready to receive job info
 		write("REDY");
+		// Read server reply
 		inputString = read();
+		// Use the algorithm to make scheduling decision
 		theAlgorithm();
+		// Quit and stop connection with the server
 		quit();
 	}
 
+	// Improved algorithm for scheduling jobs. It currently checks if there are available servers for the job that needs
+	// to be scheduled, and it sends it to the server with the highest core count. If there are no available servers,
+	// the job is scheduled to the biggest server.
 	public void theAlgorithm() {
 		if (inputString.equals("NONE")) {
 			quit();
@@ -188,6 +200,7 @@ public class TheClient {
 		return largestServer;
 	}
 
+	// Function that receive a String containing the message to be sent, and delivers it to the server
 	public void write(String text) {
 		try {
 			out.write((text + "\n").getBytes());
@@ -197,6 +210,7 @@ public class TheClient {
 		}
 	}
 
+	// Function that reads the message sent by the server and returns it as a String
 	public String read() {
 		String text = "";
 		try {
@@ -208,6 +222,8 @@ public class TheClient {
 		return text;
 	}
 
+	// Function that sends the message QUIT to end the connection with the server, and checks wether the message returned is
+	// QUIT as well, terminating all processes following the protocol
 	public void quit() {
 		try {
 			write("QUIT");
