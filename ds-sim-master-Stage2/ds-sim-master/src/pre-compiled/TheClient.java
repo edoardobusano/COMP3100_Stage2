@@ -3,8 +3,6 @@ import java.io.*;
 import org.w3c.dom.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-// ./ds-server -c <CONFIG> -n
-
 // Use ./test-results "java TheClient" -o ru -n -c ../../configs/other/
 
 public class TheClient {
@@ -16,7 +14,6 @@ public class TheClient {
 	private BufferedReader in = null;
 	private DataOutputStream out = null;
 	private Server[] servers = new Server[1];
-	private int largestServerIndex = 0;
 	private String inputString;
 	private Boolean completed = false;
 	private String[] sections;
@@ -71,17 +68,24 @@ public class TheClient {
 	}
 
 	// Improved algorithm for scheduling jobs. It currently checks if there are available servers for the job that needs
-	// to be scheduled, and it sends it to the server with the highest core count. If there are no available servers,
-	// the job is scheduled to the biggest server.
+	// to be scheduled, and it sends it to the first available server with the highest core count.
+	// If there are no available servers, the job is scheduled to the biggest server
 	public void theAlgorithm() {
+		// If the server has nothing to send, the algorithm is skipped
 		if (inputString.equals("NONE")) {
 			quit();
 		} else {
+			// Within this loop, the client first checks which message is sent by the server, and provides
+			// a reply following the client-server protocol
 			while (!completed) {
+				// If the received message is "OK" or ".", it means that our client is ready to receive more data
+				// from the server, and the server has finished delivering the previous information
 				if (inputString.equals("OK") || inputString.equals(".") || inputString.equals(".OK")) {
 					write("REDY");
 					inputString = read();
 				}
+				// Within this loop, we simply skip the messages from the server that update us with information about
+				// jobs already scheduled
 				String[] splitMessage = inputString.split("\\s+");
 				String firstWord = splitMessage[0];
 				while (firstWord.equals("JCPL") || firstWord.equals("RESF") || firstWord.equals("RESR")) {
@@ -91,14 +95,33 @@ public class TheClient {
 					splitMessage = inputString.split("\\s+");
 					firstWord = splitMessage[0];
 				}
+				// If the server has nothing else to send, we end the loop
 				if (firstWord.equals("NONE")) {
 					completed = true;
 					break;
 				}
-
+				// The client reads the last message from the server, which is job information that we will need for our
+				// scheduling
 				String[] jobSections = inputString.split("\\s+");
-
-				write("GETS Avail " + jobSections[4] + " " + jobSections[5] + " " + jobSections[6]);
+				// The client will now select the perfect server for the job to run, following the algorithm logic
+				selectServer(jobSections);
+				inputString = read();
+				String num = jobSections[2];
+				// The job is finally scheduled using the server picked from selectServer(jobSections);
+				String scheduleMessage = "SCHD " + num + " " + sections[0] + " " + sections[1];
+				write(scheduleMessage);
+				inputString = read();
+			}
+		}
+	}
+	
+	// This function takes in the job details in the form of an array of strings, and decides which server is the best fitting
+	// Following the algorithm logic. It first checks the Available servers, and picks the one with the highest core count that
+	// is able to run the job.
+	// In the case there are no Available servers, it search for the server with the highest core count that is able to run
+	// the job. "sections" is the array of strings that contain the server details of the server that will be picked at the end.
+	public void selectServer(String[] j){
+				write("GETS Avail " + j[4] + " " + j[5] + " " + j[6]);
 				String dataString = read();
 				String[] dataLines = dataString.split("\\s+");
 				int linesNum = Integer.parseInt(dataLines[1]);
@@ -107,25 +130,9 @@ public class TheClient {
 				if (!dataString.equals(".")) {
 					String[] lines = dataString.split("\\r?\\n");
 					sections = lines[0].split("\\s+");
-					for (int a = 0; a < linesNum; a++){
-
-						lines = dataString.split("\\r?\\n");
-						String[] sec = lines[0].split("\\s+");
-						if (Integer.parseInt(sec[4]) > Integer.parseInt(sections[4])){
-							sections = sec;
-						}
-						
-						if (a == linesNum -1){
-							write("OK");
-							break;
-						}
-						else {
-							dataString = read();
-						}
-					}
-					
+					compareServers(dataString, linesNum, lines);
 				} else {
-					write("GETS Capable " + jobSections[4] + " " + jobSections[5] + " " + jobSections[6]);
+					write("GETS Capable " + j[4] + " " + j[5] + " " + j[6]);
 					dataString = read();
 					dataLines = dataString.split("\\s+");
 					linesNum = Integer.parseInt(dataLines[1]);
@@ -133,29 +140,27 @@ public class TheClient {
 					dataString = read();
 					String[] lines = dataString.split("\\r?\\n");
 					sections = lines[0].split("\\s+");
-					for (int a = 0; a < linesNum; a++){
-
-						lines = dataString.split("\\r?\\n");
-						String[] sec = lines[0].split("\\s+");
-						if (Integer.parseInt(sec[4]) > Integer.parseInt(sections[4])){
-							sections = sec;
-						}
-						
-						if (a == linesNum -1){
-							write("OK");
-							break;
-						}
-						else {
-							dataString = read();
-						}
-					}
+					compareServers(dataString, linesNum, lines);
 				}
-				inputString = read();
+	}
 
-				String num = jobSections[2];
-				String scheduleMessage = "SCHD " + num + " " + sections[0] + " " + sections[1];
-				write(scheduleMessage);
-				inputString = read();
+	// This function is run within selectServer, and it is the specific code that looks for the server with the highest core
+	// count, saving the data of the selected server into "sections".
+	public void compareServers(String ds, int ln, String[] l){
+		for (int a = 0; a < ln; a++){
+
+			l = ds.split("\\r?\\n");
+			String[] sec = l[0].split("\\s+");
+			if (Integer.parseInt(sec[4]) > Integer.parseInt(sections[4])){
+				sections = sec;
+			}
+			
+			if (a == ln -1){
+				write("OK");
+				break;
+			}
+			else {
+				ds = read();
 			}
 		}
 	}
@@ -181,25 +186,11 @@ public class TheClient {
 				Server temp = new Server(i, t, c);
 				servers[i] = temp;
 			}
-			largestServerIndex = findLargestServer();
 		} catch (Exception i) {
 			i.printStackTrace();
 		}
 
 	}
-
-	// Returns the index of the largest server(CPU cores) in the array
-	// created by the readFile() method
-	public int findLargestServer() {
-		int largestServer = servers[0].id;
-		for (int i = 0; i < servers.length; i++) {
-			if (servers[i].cores > servers[largestServer].cores) {
-				largestServer = servers[i].id;
-			}
-		}
-		return largestServer;
-	}
-
 	// Function that receive a String containing the message to be sent, and delivers it to the server
 	public void write(String text) {
 		try {
